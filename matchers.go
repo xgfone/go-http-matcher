@@ -16,7 +16,7 @@ package matcher
 
 import (
 	"net/http"
-	"slices"
+	"sort"
 	"strings"
 )
 
@@ -33,11 +33,11 @@ func RemoveParentheses(s string) string {
 // Sort sorts the matchers by the priority from high to low.
 func Sort(ms []Matcher) {
 	if len(ms) > 0 {
-		slices.SortFunc(ms, cmp)
+		sort.Slice(ms, func(i, j int) bool {
+			return ms[j].Priority() < ms[i].Priority()
+		})
 	}
 }
-
-func cmp(a, b Matcher) int { return b.Priority() - a.Priority() }
 
 type matchers struct {
 	ms []Matcher
