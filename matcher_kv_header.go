@@ -14,7 +14,10 @@
 
 package matcher
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
 // Header returns a new matcher that checks whether the headers
 // has the specified key-value argument.
@@ -40,7 +43,7 @@ func Header(key, value string) Matcher {
 
 	case key == "Content-Type":
 		return New(PriorityHeader, desc, func(r *http.Request) bool {
-			return r.Header.Get(key) == value
+			return getContentType(r) == value
 		})
 
 	default:
@@ -79,7 +82,7 @@ func Headerm(headerm map[string]string) Matcher {
 				}
 
 			case key == "Content-Type":
-				if r.Header.Get(key) != value {
+				if getContentType(r) != value {
 					return false
 				}
 
@@ -93,4 +96,12 @@ func Headerm(headerm map[string]string) Matcher {
 		}
 		return true
 	})
+}
+
+func getContentType(r *http.Request) (ct string) {
+	ct = r.Header.Get("Content-Type")
+	if index := strings.IndexByte(ct, ';'); index > -1 {
+		ct = strings.TrimSpace(ct[:index])
+	}
+	return
 }
