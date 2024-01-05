@@ -71,11 +71,24 @@ func Headerm(headerm map[string]string) Matcher {
 
 	desc := kvsdesc("Header", headers)
 	return New(PriorityHeader*len(headers), desc, func(r *http.Request) bool {
-		header := r.Header
 		for key, value := range headers {
-			values, ok := header[key]
-			if !ok || (value != "" && !contains(values, value)) {
-				return false
+			switch {
+			case value == "":
+				if _, ok := r.Header[key]; !ok {
+					return false
+				}
+
+			case key == "Content-Type":
+				if r.Header.Get(key) != value {
+					return false
+				}
+
+			default:
+				values, ok := r.Header[key]
+				if !ok || !contains(values, value) {
+					return false
+				}
+
 			}
 		}
 		return true
