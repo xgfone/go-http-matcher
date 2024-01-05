@@ -31,13 +31,24 @@ func Header(key, value string) Matcher {
 
 	key = http.CanonicalHeaderKey(key)
 	desc := kvdesc("Header", key, value)
-	return New(PriorityHeader, desc, func(r *http.Request) bool {
-		values, ok := r.Header[key]
-		if !ok || (value != "" && !contains(values, value)) {
-			return false
-		}
-		return true
-	})
+	switch {
+	case value == "":
+		return New(PriorityHeader, desc, func(r *http.Request) bool {
+			_, ok := r.Header[key]
+			return ok
+		})
+
+	case key == "Content-Type":
+		return New(PriorityHeader, desc, func(r *http.Request) bool {
+			return r.Header.Get(key) == value
+		})
+
+	default:
+		return New(PriorityHeader, desc, func(r *http.Request) bool {
+			values, ok := r.Header[key]
+			return ok && contains(values, value)
+		})
+	}
 }
 
 // Headerm returns a new matcher that checks whether the headers
