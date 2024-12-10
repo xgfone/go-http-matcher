@@ -16,7 +16,6 @@ package matcher
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 	"net/netip"
 	"strings"
@@ -24,11 +23,7 @@ import (
 
 // GetClientIP is used to customize the client ip.
 var GetClientIP = func(r *http.Request) netip.Addr {
-	addr, err := netip.ParseAddr(extracthost(r.RemoteAddr))
-	if err != nil {
-		slog.Error("matcher.GetClientIP: fail to parse ip", "ip", r.RemoteAddr, "err", err)
-	}
-	return addr
+	return parseip("matcher.GetClientIP", r.RemoteAddr)
 }
 
 // ClientIP returns a new matcher that checks whether the client ip,

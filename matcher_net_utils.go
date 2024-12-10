@@ -14,9 +14,22 @@
 
 package matcher
 
-import "github.com/xgfone/go-toolkit/netx"
+import (
+	"log/slog"
+	"net/netip"
+
+	"github.com/xgfone/go-toolkit/netx"
+)
 
 func extracthost(addr string) string {
 	host, _ := netx.SplitHostPort(addr)
 	return host
+}
+
+func parseip(prefix, ip string) netip.Addr {
+	addr, err := netip.ParseAddr(extracthost(ip))
+	if err != nil {
+		slog.Error(prefix+": fail to parse ip", "ip", ip, "err", err)
+	}
+	return addr
 }

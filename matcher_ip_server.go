@@ -34,12 +34,7 @@ var GetServerIP = func(r *http.Request) netip.Addr {
 		return ip2addr(v.IP)
 
 	default:
-		host := extracthost(v.String())
-		addr, err := netip.ParseAddr(host)
-		if err != nil {
-			slog.Error("matcher.GetServerIP: fail to parse ip", "ip", host, "err", err)
-		}
-		return addr
+		return parseip("matcher.GetServerIP", v.String())
 	}
 }
 
