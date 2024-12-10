@@ -16,16 +16,19 @@ package matcher
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/netip"
 	"strings"
-
-	"github.com/xgfone/go-defaults"
 )
 
 // GetClientIP is used to customize the client ip.
 var GetClientIP = func(r *http.Request) netip.Addr {
-	return defaults.GetClientIP(r.Context(), r)
+	addr, err := netip.ParseAddr(extracthost(r.RemoteAddr))
+	if err != nil {
+		slog.Error("matcher.GetClientIP: fail to parse ip", "ip", r.RemoteAddr, "err", err)
+	}
+	return addr
 }
 
 // ClientIP returns a new matcher that checks whether the client ip,

@@ -16,18 +16,31 @@ package matcher
 
 import (
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/netip"
 	"strings"
-
-	"github.com/xgfone/go-defaults/assists"
 )
 
 // GetServerIP is used to customize the server ip.
 var GetServerIP = func(r *http.Request) netip.Addr {
 	addr := r.Context().Value(http.LocalAddrContextKey).(net.Addr)
-	return assists.ConvertAddr(addr)
+	switch v := addr.(type) {
+	case *net.TCPAddr:
+		return ip2addr(v.IP)
+
+	case *net.UDPAddr:
+		return ip2addr(v.IP)
+
+	default:
+		host := extracthost(v.String())
+		addr, err := netip.ParseAddr(host)
+		if err != nil {
+			slog.Error("matcher.GetServerIP: fail to parse ip", "ip", host, "err", err)
+		}
+		return addr
+	}
 }
 
 // ServerIP returns a new matcher that checks whether the server ip,
@@ -48,4 +61,20 @@ func ServerIP(ips ...string) (Matcher, error) {
 	return New(PriorityServerIP, desc, func(r *http.Request) bool {
 		return checker.ContainsAddr(GetServerIP(r))
 	}), nil
+}
+
+func ip2addr(ip net.IP) (addr netip.Addr) {
+	switch len(ip) {
+	case net.IPv4len:
+		addr = netip.AddrFrom4([4]byte(ip))
+	case net.IPv6len:
+		if ipv4 := ip.To4(); ipv4 != nil {
+			addr = netip.AddrFrom4([4]byte(ipv4))
+		} else {
+			addr = netip.AddrFrom16([16]byte(ip))
+		}
+	default:
+		slog.Warn("ip is not an ipv4 or ipv6", "ip", ip.String())
+	}
+	return
 }

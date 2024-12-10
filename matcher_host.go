@@ -18,8 +18,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/xgfone/go-defaults/assists"
 )
 
 // GetHost is used to customize the host, which must be lower case.
@@ -27,7 +25,7 @@ var GetHost = func(r *http.Request) string {
 	if r.TLS != nil && r.TLS.ServerName != "" {
 		return strings.ToLower(r.TLS.ServerName)
 	}
-	return strings.ToLower(assists.TrimPort(r.Host))
+	return strings.ToLower(extracthost(r.Host))
 }
 
 // Host returns a new matcher that checks whether the host is one
